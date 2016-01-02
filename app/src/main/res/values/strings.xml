@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Movie Mania</string>
+    <string name="title_movie_detail">Movie Detail</string>
+    <string name="rating_text">TMDb : %1$.1f/10</string>
+    <string name="tagline_text">\"%1$s\"</string>
+    <string name="empty_text">Oops ! Something unusual happened.</string>
+    <string name="releast_date_text">%1$s</string>
+</resources>

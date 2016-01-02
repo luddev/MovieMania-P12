@@ -1,0 +1,116 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="30dp"
+        android:layout_gravity="start|center_vertical"
+        android:orientation="horizontal"
+        >
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:id="@+id/movie_detail_poster"
+            android:padding="2dp"
+            android:background="@color/rich_black"
+            tools:src="@drawable/ic_broken_image_black_24dp"
+            android:src="@drawable/ic_broken_image_black_24dp"
+            android:gravity="start|center_vertical"
+            android:layout_weight="1"
+            />
+
+        <TextView
+            style="?android:attr/textAppearanceLarge"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/movie_detail_title"
+            tools:text="Lovely Life."
+            android:layout_gravity="start|center_vertical"
+            android:gravity="center"
+            android:layout_weight="1"
+            />
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+
+        <TextView
+            style="?android:attr/textAppearanceMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/movie_detail_date"
+            tools:text="12th Jan 2015"
+            android:padding="16dp"
+            android:gravity="center"
+            android:layout_weight="1"
+            />
+
+        <!--<RatingBar-->
+            <!--android:id="@+id/movie_detail_rating"-->
+            <!--android:padding="16dp"-->
+            <!--android:stepSize="2"-->
+            <!--style="?android:attr/ratingBarStyleSmall"-->
+            <!--android:layout_weight="3"-->
+            <!--android:numStars="5"-->
+            <!--android:rating="0"-->
+            <!--android:layout_gravity="start|center_vertical"-->
+            <!--android:foregroundGravity="left"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
+
+        <TextView
+            android:id="@+id/movie_detail_rating_text"
+            style="?android:attr/textAppearanceMedium"
+            tools:text="7.8/10"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:padding="16dp"
+
+            />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/movie_detail_tagline_text"
+        style="?android:attr/textAppearanceMedium"
+        tools:text="Life is lovely."
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="16dp"
+        />
+
+
+    <TextView
+        android:id="@+id/movie_detail_overview"
+        style="?android:attr/textAppearanceMedium"
+        tools:text="This is a short overview of how lovely life is ;)."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:lineSpacingMultiplier="1.15"
+        android:padding="16dp"
+        tools:context=".Fragment.MovieDetailFragment" />
+
+
+
+
+</LinearLayout>
+

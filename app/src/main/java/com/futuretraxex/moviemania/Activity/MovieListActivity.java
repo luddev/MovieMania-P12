@@ -3,6 +3,7 @@ package com.futuretraxex.moviemania.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -26,6 +27,9 @@ import com.futuretraxex.moviemania.Fragment.MovieDetailFragment;
 import com.futuretraxex.moviemania.Model.MovieModel;
 import com.futuretraxex.moviemania.NetworkServices.NetworkFetchService;
 import com.futuretraxex.moviemania.R;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesColumns;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesCursor;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesSelection;
 import com.futuretraxex.moviemania.utils.Constant;
 import com.futuretraxex.moviemania.utils.EndlessRecyclerOnScrollListener;
 import com.futuretraxex.moviemania.utils.Globals;
@@ -103,11 +107,74 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                 urlParams.putString("page", "1");
                 NetworkFetchService.fetchTopRatedMovies(urlParams, MovieListActivity.this);
                 break;
+            case Constant.FETCH_TYPE_FAVOURITE:
+                ((MovieListAdapter)mRecyclerView.getAdapter()).clear();
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+                mEndlessScrollListener.reset();
+                //Local Fetch
+                populateFavouriteList();
+                break;
         }
     }
 
     @OnItemSelected(R.id.spinner)
     void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    private void populateFavouriteList()    {
+        //Local Fetch
+        FavouritesSelection favSelection = new FavouritesSelection();
+        favSelection.isFavourite(true).orderByReleaseDate(true);
+        Cursor c = MovieListActivity.this.getContentResolver().query(FavouritesColumns.CONTENT_URI,
+                null,
+                favSelection.sel(),
+                favSelection.args(),
+                null);
+        if(c == null) {
+            //Show empty list view, no favourites found.
+            return;
+        }
+        c.moveToFirst();
+        do {
+            FavouritesCursor favCursor = new FavouritesCursor(c);
+            MovieModel movieModel = new MovieModel(
+                    favCursor.getAdult(),
+                    favCursor.getPosterPath(),
+                    favCursor.getMovieId(),
+                    null,
+                    favCursor.getOriginalTitle(),
+                    favCursor.getOverview(),
+                    favCursor.getReleaseDate(),
+                    favCursor.getPosterPath(),
+                    favCursor.getPopularity(),
+                    favCursor.getOriginalTitle(),
+                    true,
+                    favCursor.getVoteAverage(),
+                    0
+            );
+
+            ((MovieListAdapter)mRecyclerView.getAdapter()).addItem(movieModel);
+        }while(c.moveToNext());
+
+        c.close();
+
+        //Update UI.
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+                mRefreshLayout.setRefreshing(false);
+                if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                    mRecyclerView.setVisibility(View.GONE);
+                    mEmptyView.setVisibility(View.VISIBLE);
+                } else {
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                    mEmptyView.setVisibility(View.GONE);
+                }
+            }
+        });
+
 
     }
 
@@ -285,6 +352,9 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
             case Constant.FETCH_TYPE_TOP_RATED:
                 NetworkFetchService.fetchTopRatedMovies(urlParams, MovieListActivity.this);
                 break;
+            case Constant.FETCH_TYPE_FAVOURITE:
+                populateFavouriteList();
+                break;
         }
     }
 
@@ -363,6 +433,10 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
             mValues.add(mGson.fromJson(movieModelGsonString, MovieModel.class));
         }
 
+        public void addItem(MovieModel movieModel)  {
+            mValues.add(movieModel);
+        }
+
         public ArrayList<MovieModel> getMovieList()  {
             return mValues;
         }
@@ -382,6 +456,10 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
 //        holder.mIdView.setText(mValues.get(position).id);
 //        holder.mContentView.setText(mValues.get(position).content);
             holder.mProgressBar.setVisibility(ProgressBar.VISIBLE);
+
+            //TODO : Show a favourite icon if the 'id' (movie_id) is present in favourites list :).
+            //TODO : On clicking that fav icon the favourites state should toggle on that list item and should be updated in database.
+
             Picasso.with(MovieListActivity.this)
                     .load(Utils.generateW342ImageUri(holder.mItem.poster_path))
                     .fit()

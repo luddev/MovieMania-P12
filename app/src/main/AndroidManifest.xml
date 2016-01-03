@@ -38,6 +38,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".Activity.MovieListActivity" />
         </activity>
+
+        <!-- Provider generated using https://github.com/BoD/android-contentprovider-generator -->
+        <provider
+            android:name="com.futuretraxex.moviemania.provider.MovieManiaProvider"
+            android:authorities="com.futuretraxex.moviemania.provider"
+            android:exported="false" />
+
+
     </application>
 
 </manifest>

@@ -69,6 +69,8 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
     private MovieDetailViewHolder mMovieDetailViewHolder;
 
+    //TODO : On click FAB the movie should be added to a local favourite list (state should toggle and persist).
+    //TODO : decide wether to save Reviews and Videos in local storage or not. discuss with Udacity Forum Members.
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the

@@ -1,0 +1,67 @@
+{
+  "documentation": "List of favourites movie.",
+  "fields": [
+    {
+      "documentation": "Unique TMDB Movie id",
+      "name": "movie_id",
+      "type": "Long",
+      "nullable" : false
+    },
+    {
+      "name": "original_title",
+      "type": "String",
+      "nullable" : false
+    },
+    {
+      "name" : "overview",
+      "type" : "String",
+      "nullable" : false
+    },
+    {
+      "name" : "poster_path",
+      "type" : "String",
+
+    },
+    {
+      "name" : "release_date",
+      "type" : "String",
+    },
+    {
+      "name" : "tagline",
+      "type" : "String",
+    },
+    {
+      "name" : "popularity",
+      "type" : "Float"
+    },
+    {
+      "name" : "vote_average",
+      "type" : "Float"
+    },
+    {
+      "documentation" : "Boolean wether movie is adult rated or not",
+      "name" : "adult",
+      "type" : "Boolean"
+    },
+    {
+      "name" : "serialized_reviews",
+      "type" : "String"
+    },
+    {
+      "name": "serialized_trailers",
+      "type": "String"
+    },
+    {
+      "name" : "is_favourite",
+      "type" : "Boolean",
+      "nullable" : false
+    }
+  ],
+
+  "constraints": [
+    {
+      "name": "unique_id",
+      "definition": "UNIQUE (movie_id) ON CONFLICT REPLACE"
+    }
+  ]
+}

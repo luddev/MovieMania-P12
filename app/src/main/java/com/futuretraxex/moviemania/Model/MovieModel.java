@@ -23,6 +23,34 @@ public class MovieModel implements Parcelable {
     public int vote_count;
 
 
+    public MovieModel(Boolean adult,
+                      String backdrop_path,
+                      long id,
+                      String original_language,
+                      String original_title,
+                      String overview,
+                      String release_date,
+                      String poster_path,
+                      float popularity,
+                      String title,
+                      Boolean video,
+                      float vote_average,
+                      int vote_count) {
+        this.adult = adult;
+        this.backdrop_path = backdrop_path;
+        this.id = id;
+        this.original_language = original_language;
+        this.original_title = original_title;
+        this.overview = overview;
+        this.release_date = release_date;
+        this.poster_path = poster_path;
+        this.popularity = popularity;
+        this.title = title;
+        this.video = video;
+        this.vote_average = vote_average;
+        this.vote_count = vote_count;
+    }
+
     protected MovieModel(Parcel in) {
         byte adultVal = in.readByte();
         adult = adultVal == 0x02 ? null : adultVal != 0x00;

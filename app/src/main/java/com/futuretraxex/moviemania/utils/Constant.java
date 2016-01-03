@@ -29,7 +29,7 @@ public class Constant {
 
     public static final int FETCH_TYPE_POPULAR = 0;
     public static final int FETCH_TYPE_TOP_RATED = 1;
-    public static final int FETCH_TYPE_LATEST = 2;
+    public static final int FETCH_TYPE_FAVOURITE = 2;
     public static final int FETCH_TYPE_UPCOMING = 3;
 
     public static final int GRID_OPTIMAL_WIDTH = 300;

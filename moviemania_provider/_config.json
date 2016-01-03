@@ -1,0 +1,13 @@
+{
+  "syntaxVersion": 3,
+  "projectPackageId": "com.futuretraxex.moviemania",
+  "authority": "com.futuretraxex.moviemania.provider",
+  "providerJavaPackage": "com.futuretraxex.moviemania.provider",
+  "providerClassName": "MovieManiaProvider",
+  "sqliteOpenHelperClassName": "MovieManiaDbHelper",
+  "sqliteOpenHelperCallbacksClassName": "MovieManiaDbHelperCallbacks",
+  "databaseFileName": "moviemania.db",
+  "databaseVersion": 1,
+  "enableForeignKeys": true,
+  "useAnnotations": true
+}

@@ -27,6 +27,8 @@ public class FavouritesColumns implements BaseColumns {
 
     public static final String OVERVIEW = "overview";
 
+    public static final String BACKDROP_PATH = "backdrop_path";
+
     public static final String POSTER_PATH = "poster_path";
 
     public static final String RELEASE_DATE = "release_date";
@@ -57,6 +59,7 @@ public class FavouritesColumns implements BaseColumns {
             MOVIE_ID,
             ORIGINAL_TITLE,
             OVERVIEW,
+            BACKDROP_PATH,
             POSTER_PATH,
             RELEASE_DATE,
             TAGLINE,
@@ -75,6 +78,7 @@ public class FavouritesColumns implements BaseColumns {
             if (c.equals(MOVIE_ID) || c.contains("." + MOVIE_ID)) return true;
             if (c.equals(ORIGINAL_TITLE) || c.contains("." + ORIGINAL_TITLE)) return true;
             if (c.equals(OVERVIEW) || c.contains("." + OVERVIEW)) return true;
+            if (c.equals(BACKDROP_PATH) || c.contains("." + BACKDROP_PATH)) return true;
             if (c.equals(POSTER_PATH) || c.contains("." + POSTER_PATH)) return true;
             if (c.equals(RELEASE_DATE) || c.contains("." + RELEASE_DATE)) return true;
             if (c.equals(TAGLINE) || c.contains("." + TAGLINE)) return true;

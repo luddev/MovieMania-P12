@@ -3,5 +3,6 @@
     <string-array name="movie_sort_option_array">
         <item>Popularity</item>
         <item>Top Rated</item>
+        <item>Favourites</item>
     </string-array>
 </resources>

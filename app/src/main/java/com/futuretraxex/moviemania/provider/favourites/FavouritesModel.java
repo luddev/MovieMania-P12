@@ -32,6 +32,13 @@ public interface FavouritesModel extends BaseModel {
     String getOverview();
 
     /**
+     * Get the {@code backdrop_path} value.
+     * Can be {@code null}.
+     */
+    @Nullable
+    String getBackdropPath();
+
+    /**
      * Get the {@code poster_path} value.
      * Can be {@code null}.
      */

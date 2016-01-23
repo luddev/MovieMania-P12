@@ -62,6 +62,16 @@ public class FavouritesContentValues extends AbstractContentValues {
     }
 
 
+    public FavouritesContentValues putBackdropPath(@Nullable String value) {
+        mContentValues.put(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesContentValues putBackdropPathNull() {
+        mContentValues.putNull(FavouritesColumns.BACKDROP_PATH);
+        return this;
+    }
+
     public FavouritesContentValues putPosterPath(@Nullable String value) {
         mContentValues.put(FavouritesColumns.POSTER_PATH, value);
         return this;

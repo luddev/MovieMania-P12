@@ -122,58 +122,79 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
 
     }
 
+    //TODO : Do this on background thread. -- Done
     private void populateFavouriteList()    {
         //Local Fetch
-        FavouritesSelection favSelection = new FavouritesSelection();
-        favSelection.isFavourite(true).orderByReleaseDate(true);
-        Cursor c = MovieListActivity.this.getContentResolver().query(FavouritesColumns.CONTENT_URI,
-                null,
-                favSelection.sel(),
-                favSelection.args(),
-                null);
-        if(c == null) {
-            //Show empty list view, no favourites found.
-            return;
-        }
-        c.moveToFirst();
-        do {
-            FavouritesCursor favCursor = new FavouritesCursor(c);
-            MovieModel movieModel = new MovieModel(
-                    favCursor.getAdult(),
-                    favCursor.getPosterPath(),
-                    favCursor.getMovieId(),
-                    null,
-                    favCursor.getOriginalTitle(),
-                    favCursor.getOverview(),
-                    favCursor.getReleaseDate(),
-                    favCursor.getPosterPath(),
-                    favCursor.getPopularity(),
-                    favCursor.getOriginalTitle(),
-                    true,
-                    favCursor.getVoteAverage(),
-                    0
-            );
-
-            ((MovieListAdapter)mRecyclerView.getAdapter()).addItem(movieModel);
-        }while(c.moveToNext());
-
-        c.close();
-
-        //Update UI.
-        runOnUiThread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-                mRefreshLayout.setRefreshing(false);
-                if (mRecyclerView.getAdapter().getItemCount() == 0) {
-                    mRecyclerView.setVisibility(View.GONE);
-                    mEmptyView.setVisibility(View.VISIBLE);
-                } else {
-                    mRecyclerView.setVisibility(View.VISIBLE);
-                    mEmptyView.setVisibility(View.GONE);
+                FavouritesSelection favSelection = new FavouritesSelection();
+                favSelection.isFavourite(true).orderByReleaseDate().orderByVoteAverage();
+                Cursor c = MovieListActivity.this.getContentResolver().query(FavouritesColumns.CONTENT_URI,
+                        null,
+                        favSelection.sel(),
+                        favSelection.args(),
+                        null);
+                if(c == null || !c.moveToFirst()) {
+                    //Show empty list view, no favourites found.
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            mRecyclerView.getAdapter().notifyDataSetChanged();
+                            mRefreshLayout.setRefreshing(false);
+                            if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                                mRecyclerView.setVisibility(View.GONE);
+                                mEmptyView.setVisibility(View.VISIBLE);
+                            } else {
+                                mRecyclerView.setVisibility(View.VISIBLE);
+                                mEmptyView.setVisibility(View.GONE);
+                            }
+                        }
+                    });
+                    return;
                 }
+                do {
+                    FavouritesCursor favCursor = new FavouritesCursor(c);
+                    MovieModel movieModel = new MovieModel(
+                            favCursor.getAdult(),
+                            favCursor.getPosterPath(),
+                            favCursor.getMovieId(),
+                            favCursor.getBackdropPath(),
+                            favCursor.getOriginalTitle(),
+                            favCursor.getOverview(),
+                            favCursor.getReleaseDate(),
+                            favCursor.getPosterPath(),
+                            favCursor.getPopularity(),
+                            favCursor.getOriginalTitle(),
+                            true,
+                            favCursor.getVoteAverage(),
+                            0
+                    );
+
+                    ((MovieListAdapter)mRecyclerView.getAdapter()).addItem(movieModel);
+                }while(c.moveToNext());
+
+                c.close();
+
+
+                //Update UI.
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                        mRefreshLayout.setRefreshing(false);
+                        if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                            mRecyclerView.setVisibility(View.GONE);
+                            mEmptyView.setVisibility(View.VISIBLE);
+                        } else {
+                            mRecyclerView.setVisibility(View.VISIBLE);
+                            mEmptyView.setVisibility(View.GONE);
+                        }
+                    }
+                });
             }
-        });
+        }).start();
 
 
     }

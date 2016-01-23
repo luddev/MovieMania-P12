@@ -28,6 +28,7 @@ public class MovieManiaDbHelper extends SQLiteOpenHelper {
             + FavouritesColumns.MOVIE_ID + " INTEGER NOT NULL, "
             + FavouritesColumns.ORIGINAL_TITLE + " TEXT NOT NULL, "
             + FavouritesColumns.OVERVIEW + " TEXT NOT NULL, "
+            + FavouritesColumns.BACKDROP_PATH + " TEXT, "
             + FavouritesColumns.POSTER_PATH + " TEXT, "
             + FavouritesColumns.RELEASE_DATE + " TEXT, "
             + FavouritesColumns.TAGLINE + " TEXT, "

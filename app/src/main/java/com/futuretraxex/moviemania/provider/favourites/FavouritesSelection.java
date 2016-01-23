@@ -198,6 +198,46 @@ public class FavouritesSelection extends AbstractSelection<FavouritesSelection> 
         return this;
     }
 
+    public FavouritesSelection backdropPath(String... value) {
+        addEquals(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection backdropPathNot(String... value) {
+        addNotEquals(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection backdropPathLike(String... value) {
+        addLike(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection backdropPathContains(String... value) {
+        addContains(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection backdropPathStartsWith(String... value) {
+        addStartsWith(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection backdropPathEndsWith(String... value) {
+        addEndsWith(FavouritesColumns.BACKDROP_PATH, value);
+        return this;
+    }
+
+    public FavouritesSelection orderByBackdropPath(boolean desc) {
+        orderBy(FavouritesColumns.BACKDROP_PATH, desc);
+        return this;
+    }
+
+    public FavouritesSelection orderByBackdropPath() {
+        orderBy(FavouritesColumns.BACKDROP_PATH, false);
+        return this;
+    }
+
     public FavouritesSelection posterPath(String... value) {
         addEquals(FavouritesColumns.POSTER_PATH, value);
         return this;

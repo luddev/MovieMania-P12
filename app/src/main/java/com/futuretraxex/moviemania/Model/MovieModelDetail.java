@@ -42,6 +42,10 @@ public class MovieModelDetail implements Parcelable {
         vote_count = in.readInt();
     }
 
+    public MovieModelDetail()   {
+
+    }
+
     @Override
     public int describeContents() {
         return 0;

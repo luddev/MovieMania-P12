@@ -61,6 +61,16 @@ public class FavouritesCursor extends AbstractCursor implements FavouritesModel 
     }
 
     /**
+     * Get the {@code backdrop_path} value.
+     * Can be {@code null}.
+     */
+    @Nullable
+    public String getBackdropPath() {
+        String res = getStringOrNull(FavouritesColumns.BACKDROP_PATH);
+        return res;
+    }
+
+    /**
      * Get the {@code poster_path} value.
      * Can be {@code null}.
      */

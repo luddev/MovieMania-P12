@@ -34,6 +34,8 @@ import com.futuretraxex.moviemania.Activity.MovieListActivity;
 import com.futuretraxex.moviemania.Model.MovieModelDetail;
 import com.futuretraxex.moviemania.NetworkServices.NetworkFetchService;
 import com.futuretraxex.moviemania.R;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesCursor;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesSelection;
 import com.futuretraxex.moviemania.utils.Globals;
 import com.futuretraxex.moviemania.utils.Utils;
 import com.google.gson.Gson;
@@ -69,8 +71,8 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
     private MovieDetailViewHolder mMovieDetailViewHolder;
 
-    //TODO : On click FAB the movie should be added to a local favourite list (state should toggle and persist).
     //TODO : decide wether to save Reviews and Videos in local storage or not. discuss with Udacity Forum Members.
+    //TODO : Make favourites work when we are offline.
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -123,7 +125,35 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
         Bundle urlParams = new Bundle();
         urlParams.putString("movie_id",String.valueOf(mId));
-        NetworkFetchService.fetchMovieData(urlParams, this);
+        if(Utils.getNetworkConnectivity(getActivity())) {
+            NetworkFetchService.fetchMovieData(urlParams, this);
+        }
+        else {
+            Bundle data = new Bundle();
+            FavouritesSelection where = new FavouritesSelection();
+            where.movieId(mId);
+            FavouritesCursor favouriteItem = where.query(getActivity().getContentResolver());
+            if(favouriteItem !=null && favouriteItem.moveToFirst()) {
+                MovieModelDetail movieData = new MovieModelDetail();
+                movieData.adult = favouriteItem.getAdult();
+                movieData.poster_path = favouriteItem.getPosterPath();
+                movieData.title = favouriteItem.getOriginalTitle();
+                movieData.original_title = favouriteItem.getOriginalTitle();
+                movieData.vote_average = favouriteItem.getVoteAverage();
+                movieData.overview = favouriteItem.getOverview();
+                movieData.release_date = favouriteItem.getReleaseDate();
+                movieData.popularity = favouriteItem.getPopularity();
+                movieData.tagline = favouriteItem.getTagline();
+                movieData.id = favouriteItem.getMovieId();
+                movieData.backdrop_path = favouriteItem.getBackdropPath();
+
+                String movieString = mGson.toJson(movieData,MovieModelDetail.class);
+                data.putString("movie_data",movieString);
+                onSuccess(data);
+            }
+
+        }
+
     }
 
 

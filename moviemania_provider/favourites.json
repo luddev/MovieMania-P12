@@ -18,6 +18,10 @@
       "nullable" : false
     },
     {
+      "name" : "backdrop_path",
+      "type" : "String"  
+    },
+    {
       "name" : "poster_path",
       "type" : "String",
 

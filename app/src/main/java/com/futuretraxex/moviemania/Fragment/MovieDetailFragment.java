@@ -26,12 +26,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.TextSwitcher;
 import android.widget.TextView;
 
 import com.futuretraxex.moviemania.Activity.MovieDetailActivity;
 import com.futuretraxex.moviemania.Activity.MovieListActivity;
 import com.futuretraxex.moviemania.Model.MovieModelDetail;
+import com.futuretraxex.moviemania.Model.MovieReviewModel;
+import com.futuretraxex.moviemania.Model.MovieTrailerModel;
 import com.futuretraxex.moviemania.NetworkServices.NetworkFetchService;
 import com.futuretraxex.moviemania.R;
 import com.futuretraxex.moviemania.provider.favourites.FavouritesCursor;
@@ -43,6 +47,8 @@ import com.orhanobut.logger.Logger;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.w3c.dom.Text;
 
 import butterknife.Bind;
@@ -123,16 +129,16 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
             mId = getArguments().getLong(ARG_ITEM_ID);
         }
 
-        Bundle urlParams = new Bundle();
-        urlParams.putString("movie_id",String.valueOf(mId));
+
         if(Utils.getNetworkConnectivity(getActivity())) {
-            NetworkFetchService.fetchMovieData(urlParams, this);
+            NetworkFetchService.fetchMovieData(mId, this);
         }
         else {
             Bundle data = new Bundle();
             FavouritesSelection where = new FavouritesSelection();
             where.movieId(mId);
             FavouritesCursor favouriteItem = where.query(getActivity().getContentResolver());
+
             if(favouriteItem !=null && favouriteItem.moveToFirst()) {
                 MovieModelDetail movieData = new MovieModelDetail();
                 movieData.adult = favouriteItem.getAdult();
@@ -147,12 +153,18 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
                 movieData.id = favouriteItem.getMovieId();
                 movieData.backdrop_path = favouriteItem.getBackdropPath();
 
+
                 String movieString = mGson.toJson(movieData,MovieModelDetail.class);
+
+                data.putString("trailer_data",favouriteItem.getSerializedTrailers());
+                data.putString("review_data",favouriteItem.getSerializedReviews());
                 data.putString("movie_data",movieString);
                 onSuccess(data);
             }
 
         }
+
+        //Fetch Reviews and trailers.
 
     }
 
@@ -201,11 +213,20 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         String movieData = data.getString("movie_data");
         final MovieModelDetail movie = mGson.fromJson(movieData, MovieModelDetail.class);
 //      final RatingBar ratingBar = (RatingBar) getView().findViewById(R.id.movie_detail_rating);
+        try {
+            JSONArray movieReviewsJSON = new JSONArray(data.getString("review_data"));
+            JSONArray movieTrailersJSON = new JSONArray(data.getString("trailer_data"));
+            MovieReviewModel movieReviews[] = new MovieReviewModel[movieReviewsJSON.length()];
+            MovieTrailerModel movieTrailers[] = new MovieTrailerModel[movieTrailersJSON.length()];
+            //SetupAppBar in case of
+            setupAppBar(movie);
+            //Populate UI data.
+            populateLayout(movie,movieReviews,movieTrailers);
+        }
+        catch(JSONException jox)    {
+            Logger.e(jox.toString());
+        }
 
-        //SetupAppBar in case of
-        setupAppBar(movie);
-        //Populate UI data.
-        populateLayout(movie);
     }
 
     @Override
@@ -220,7 +241,7 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
     }
 
 
-    private void populateLayout(final MovieModelDetail movie)   {
+    private void populateLayout(final MovieModelDetail movie, final MovieReviewModel[] movieReviewModels, final MovieTrailerModel[] movieTrailerModels)   {
 
 
         Resources res = getResources();
@@ -339,6 +360,10 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         public TextView mMovieDateText;
         @Bind(R.id.movie_detail_poster)
         public ImageView mMoviePoster;
+        @Bind(R.id.trailers)
+        public GridView mMovieTrailers;
+        @Bind(R.id.reviews)
+        public TextSwitcher mMovieReviews;
 
         MovieDetailViewHolder(View rootView) {
             ButterKnife.bind(this,rootView);

@@ -24,6 +24,8 @@ public class Constant {
      */
     public static String API_GET_MOVIE_DETAIL = "http://api.themoviedb.org/3/movie";
 
+    public static String API_GET_MOVIE_TRAILER = "http://api.themoviedb.org/3/movie";
+
 
     public static String YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch";
 

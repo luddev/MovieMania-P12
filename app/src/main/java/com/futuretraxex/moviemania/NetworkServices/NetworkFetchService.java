@@ -149,7 +149,7 @@ public class NetworkFetchService {
     }
 
 
-    public static void fetchMovieData(final Bundle urlParams, final NetworkFetchServiceCB networkFetchServiceCB)    {
+    public static void fetchMovieData(final long movieId, final NetworkFetchServiceCB networkFetchServiceCB)    {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -158,17 +158,17 @@ public class NetworkFetchService {
                 client.networkInterceptors().add(new StethoInterceptor());
                 Bundle data = new Bundle();
                 Uri uri = Uri.parse(Constant.API_GET_MOVIE_DETAIL).buildUpon()
-                        .appendEncodedPath(urlParams.getString("movie_id"))
+                        .appendEncodedPath("" + movieId)
                         .appendQueryParameter("api_key", Constant.API_KEY)
                         .build();
 
-                if(urlParams != null)   {
-                    for(String key : urlParams.keySet())    {
-                        uri = uri.buildUpon()
-                                .appendQueryParameter(key, urlParams.getString(key))
-                                .build();
-                    }
-                }
+//                if(movieId != null)   {
+//                    for(String key : movieId.keySet())    {
+//                        uri = uri.buildUpon()
+//                                .appendQueryParameter(key, movieId.getString(key))
+//                                .build();
+//                    }
+//                }
 
                 Request request = new Request.Builder()
                         .url(uri.toString())
@@ -189,6 +189,127 @@ public class NetworkFetchService {
                 }
             }
         }).start();
+    }
+
+    public static void fetchMovieTrailer(final long movieId, final NetworkFetchServiceCB networkFetchServiceCB)  {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Logger.init();
+                OkHttpClient client = new OkHttpClient();
+                client.networkInterceptors().add(new StethoInterceptor());
+                Bundle data = new Bundle();
+                Uri uri = Uri.parse(Constant.API_GET_MOVIE_TRAILER).buildUpon()
+                        .appendEncodedPath("" + movieId)
+                        .appendEncodedPath("videos")
+                        .appendQueryParameter("api_key", Constant.API_KEY)
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url(uri.toString())
+                        .build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    data.putString("message", "success");
+                    JSONObject resultObject = new JSONObject(responseData);
+                    JSONArray trailersList = resultObject.getJSONArray("results");
+                    data.putString("trailer_data", trailersList.toString());
+                    networkFetchServiceCB.onSuccess(data);
+                }
+                catch(IOException|JSONException iox)  {
+                    Logger.e(iox.toString());
+                    iox.printStackTrace();
+                    //TODO : Add user-friendly messages
+                    data.putString("message","Exception Occoured");
+                    networkFetchServiceCB.onFailure(data);
+                }
+            }
+        }).start();
+    }
+
+    public static void fetchMovieReviews(final long movieId, final NetworkFetchServiceCB networkFetchServiceCB)  {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Logger.init();
+                OkHttpClient client = new OkHttpClient();
+                client.networkInterceptors().add(new StethoInterceptor());
+                Bundle data = new Bundle();
+                Uri uri = Uri.parse(Constant.API_GET_MOVIE_TRAILER).buildUpon()
+                        .appendEncodedPath("" + movieId)
+                        .appendEncodedPath("reviews")
+                        .appendQueryParameter("api_key", Constant.API_KEY)
+                        .build();
+
+                Request request = new Request.Builder()
+                        .url(uri.toString())
+                        .build();
+                try {
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    data.putString("message", "success");
+                    JSONObject resultObject = new JSONObject(responseData);
+                    JSONArray reviewList = resultObject.getJSONArray("results");
+                    data.putString("review_data", reviewList.toString());
+                    networkFetchServiceCB.onSuccess(data);
+                }
+                catch(IOException|JSONException iox)  {
+                    Logger.e(iox.toString());
+                    iox.printStackTrace();
+                    //TODO : Add user-friendly messages
+                    data.putString("message","Exception Occoured");
+                    networkFetchServiceCB.onFailure(data);
+                }
+            }
+        }).start();
+    }
+
+    public static void fetchMovieDataReviewandTrailer(final long movieId, final NetworkFetchServiceCB networkFetchServiceCB)    {
+
+        NetworkFetchService.fetchMovieData(movieId, new NetworkFetchServiceCB() {
+            @Override
+            public void onSuccess(Bundle data) {
+                final String movie_data = data.getString("movie_data");
+
+                NetworkFetchService.fetchMovieTrailer(movieId, new NetworkFetchServiceCB() {
+                    @Override
+                    public void onSuccess(Bundle data) {
+                        final String trailer_data = data.getString("trailer_data");
+
+                        NetworkFetchService.fetchMovieReviews(movieId, new NetworkFetchServiceCB() {
+                            @Override
+                            public void onSuccess(Bundle data) {
+                                final String review_data = data.getString("review_data");
+                                Bundle finalData = new Bundle();
+                                finalData.putString("movie_data",movie_data);
+                                finalData.putString("trailer_data",trailer_data);
+                                finalData.putString("review_data",review_data);
+                                networkFetchServiceCB.onSuccess(finalData);
+                            }
+                            
+                            @Override
+                            public void onFailure(Bundle data) {
+                                //// FIXME: 25-01-2016 Add meaningful error messages.
+                                networkFetchServiceCB.onFailure(null);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(Bundle data) {
+                        //// FIXME: 25-01-2016 Add meaningful error messages.
+                        networkFetchServiceCB.onFailure(null);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Bundle data) {
+                //// FIXME: 25-01-2016 Add meaningful error messages.
+                networkFetchServiceCB.onFailure(null);
+            }
+        });
     }
 
     /**

@@ -102,7 +102,18 @@ public class MovieDetailActivity extends AppCompatActivity {
                     .add(R.id.movie_detail_container, fragment)
                     .commit();
         }
-        setFabIcon();
+
+        FavouritesSelection where = new FavouritesSelection();
+        where.movieId(mMovieID).and().isFavourite(true);
+        FavouritesCursor favouriteItem = where.query(getContentResolver());
+        //Set floating bar icon depending on wether current movie is in favourite list or not.
+        if(favouriteItem != null && favouriteItem.moveToFirst())    {
+            setFabIcon(true);
+        }
+        else {
+            setFabIcon(false);
+        }
+
     }
 
 
@@ -116,39 +127,46 @@ public class MovieDetailActivity extends AppCompatActivity {
         FavouritesCursor favouriteItem = where.query(getContentResolver());
         //If movie is in database check if it is favourite or not.
         if(favouriteItem != null && favouriteItem.moveToFirst())    {
-            //if it is favourite, unFavourite it.
-//            FavouritesContentValues values = new FavouritesContentValues();
-//            values.putMovieId(mMovieID);
-//            if(favouriteItem.getIsFavourite())  {
-//                values.putIsFavourite(false);
-//                Snackbar.make(view, "Removed from Favourites", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//
-//            }
-//            //if it is not favourite, Favourite it.
-//            else {
-//                Snackbar.make(view, "Added to Favourites", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//                values.putIsFavourite(true);
-//
-//            }
+//            if it is favourite, unFavourite it.
+            FavouritesContentValues values = new FavouritesContentValues();
+            values.putMovieId(mMovieID);
+            if(favouriteItem.getIsFavourite())  {
+                values.putIsFavourite(false);
+                Snackbar.make(view, "Removed from Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                setFabIcon(false);
+
+            }
+            //if it is not favourite, Favourite it.
+            else {
+                Snackbar.make(view, "Added to Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                values.putIsFavourite(true);
+                setFabIcon(true);
+
+            }
             Uri movieUri = ContentUris.withAppendedId(FavouritesColumns.CONTENT_URI,favouriteItem.getId());
-            getContentResolver().delete(movieUri,null,null);
+            getContentResolver().update(movieUri,values.values(),null,null);
+//            getContentResolver().delete(movieUri,null,null);
             //Use this instead.
 //                String WHERE = FavouritesColumns.MOVIE_ID + "= ?";
-//                getContentResolver().update(FavouritesColumns.CONTENT_URI,values.values(),WHERE,new String[] {new Long(favouriteItem.getMovieId()).toString()});
+//            getContentResolver().update(FavouritesColumns.CONTENT_URI,values.values(),WHERE,new String[] {new Long(favouriteItem.getMovieId()).toString()});
             //Update Fav icon.
-            setFabIcon();
+
         }
         else {
             //if it isn't in database add it and favourite it.
             final FavouritesContentValues values = new FavouritesContentValues();
             values.putIsFavourite(true);
-            Bundle inData = new Bundle();
             Snackbar.make(view, "Added to Favourites", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
-            inData.putString("movie_id",new Long(mMovieID).toString());
-            NetworkFetchService.fetchMovieData(inData, new NetworkFetchService.NetworkFetchServiceCB() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setFabIcon(true);
+                }
+            });
+            NetworkFetchService.fetchMovieDataReviewandTrailer(mMovieID, new NetworkFetchService.NetworkFetchServiceCB() {
                 @Override
                 public void onSuccess(Bundle data) {
                     MovieModelDetail movieData = gson.fromJson(data.getString("movie_data"),MovieModelDetail.class);
@@ -163,15 +181,10 @@ public class MovieDetailActivity extends AppCompatActivity {
                     values.putReleaseDate(movieData.release_date);
                     values.putBackdropPath(movieData.backdrop_path);
                     //Insert into table.
-                    MovieDetailActivity.this.getContentResolver().insert(FavouritesColumns.CONTENT_URI,
-                            values.values());
-                    //Update UI.
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            setFabIcon();
-                        }
-                    });
+                    values.putSerializedTrailers(data.getString("trailer_data"));
+                    values.putSerializedReviews(data.getString("review_data"));
+                    getContentResolver().insert(FavouritesColumns.CONTENT_URI,values.values());
+
                 }
 
                 @Override
@@ -184,29 +197,15 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     }
 
-    private void setFabIcon()   {
+    private void setFabIcon(boolean isFavourite)   {
         long itemID = mMovieID;
 
-        FavouritesSelection where = new FavouritesSelection();
-        where.movieId(itemID);
-        FavouritesCursor favouriteItem = where.query(getContentResolver());
-
-        if(favouriteItem != null && favouriteItem.moveToFirst()) {
-            if(favouriteItem.getIsFavourite())  {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_black_24dp));
-                }
-                else {
-                    mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_black_24dp));
-                }
+        if(isFavourite) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_black_24dp));
             }
             else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_border_black_24dp));
-                }
-                else {
-                    mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_black_24dp));
-                }
+                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_black_24dp));
             }
         }
         else {
@@ -217,6 +216,37 @@ public class MovieDetailActivity extends AppCompatActivity {
                 mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_black_24dp));
             }
         }
+
+//        FavouritesSelection where = new FavouritesSelection();
+//        where.movieId(itemID);
+//        FavouritesCursor favouriteItem = where.query(getContentResolver());
+//
+//        if(favouriteItem != null && favouriteItem.moveToFirst()) {
+//            if(favouriteItem.getIsFavourite())  {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                    mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_black_24dp));
+//                }
+//                else {
+//                    mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_black_24dp));
+//                }
+//            }
+//            else {
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                    mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_border_black_24dp));
+//                }
+//                else {
+//                    mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_black_24dp));
+//                }
+//            }
+//        }
+//        else {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                mFab.setImageDrawable(getDrawable(R.drawable.ic_favorite_border_black_24dp));
+//            }
+//            else {
+//                mFab.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_black_24dp));
+//            }
+//        }
     }
 
 

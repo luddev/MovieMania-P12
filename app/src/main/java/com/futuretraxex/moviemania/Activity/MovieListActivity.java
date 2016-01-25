@@ -122,14 +122,32 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
 
     }
 
+
+
     //TODO : Do this on background thread. -- Done
     private void populateFavouriteList()    {
         //Local Fetch
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((MovieListAdapter)mRecyclerView.getAdapter()).clear();
+                mRecyclerView.getAdapter().notifyDataSetChanged();
+                mRefreshLayout.setRefreshing(false);
+                mLoading = false;
+                if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                    mRecyclerView.setVisibility(View.GONE);
+                    mEmptyView.setVisibility(View.VISIBLE);
+                } else {
+                    mRecyclerView.setVisibility(View.VISIBLE);
+                    mEmptyView.setVisibility(View.GONE);
+                }
+            }
+        });
         new Thread(new Runnable() {
             @Override
             public void run() {
                 FavouritesSelection favSelection = new FavouritesSelection();
-                favSelection.isFavourite(true).orderByReleaseDate().orderByVoteAverage();
+                favSelection.isFavourite(true);
                 Cursor c = MovieListActivity.this.getContentResolver().query(FavouritesColumns.CONTENT_URI,
                         null,
                         favSelection.sel(),
@@ -143,6 +161,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
 
                             mRecyclerView.getAdapter().notifyDataSetChanged();
                             mRefreshLayout.setRefreshing(false);
+                            mLoading = false;
                             if (mRecyclerView.getAdapter().getItemCount() == 0) {
                                 mRecyclerView.setVisibility(View.GONE);
                                 mEmptyView.setVisibility(View.VISIBLE);
@@ -184,6 +203,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                     public void run() {
                         mRecyclerView.getAdapter().notifyDataSetChanged();
                         mRefreshLayout.setRefreshing(false);
+                        mLoading = false;
                         if (mRecyclerView.getAdapter().getItemCount() == 0) {
                             mRecyclerView.setVisibility(View.GONE);
                             mEmptyView.setVisibility(View.VISIBLE);

@@ -109,7 +109,21 @@
         android:padding="16dp"
         tools:context=".Fragment.MovieDetailFragment" />
 
+    <GridView
+        android:id="@+id/trailers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+
+    </GridView>
+
+    <TextSwitcher
+        android:id="@+id/reviews"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+
+    </TextSwitcher>
 
 
 </LinearLayout>

@@ -18,6 +18,11 @@ public class Constant {
     public static String API_GET_POPULAR_MOVIES = "http://api.themoviedb.org/3/movie/popular";
 
     public static String API_GET_TOP_RATED_MOVIES = "http://api.themoviedb.org/3/movie/top_rated";
+    //http://img.youtube.com/vi/<insert-youtube-video-id-here>/hqdefault.jpg
+    //http://img.youtube.com/vi/<insert-youtube-video-id-here>/sddefault.jpg
+    //http://img.youtube.com/vi/<insert-youtube-video-id-here>/mqdefault.jpg
+    public static String API_YOUTUBE_IMAGE_BASE_URL = "http://img.youtube.com/vi/";
+    public static String API_YOUTUBE_MQ_IMAGE_CODE = "mqdefault.jpg";
 
     /**
      * Movie Detail URL is of the format /movie/{id}

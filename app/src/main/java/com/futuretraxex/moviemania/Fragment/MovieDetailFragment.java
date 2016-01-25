@@ -3,6 +3,7 @@ package com.futuretraxex.moviemania.Fragment;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -10,17 +11,24 @@ import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.Rating;
+import android.net.Uri;
 import android.os.Build;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Layout;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
 import android.util.Patterns;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,9 +38,12 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextSwitcher;
 import android.widget.TextView;
+import android.widget.ViewSwitcher;
 
 import com.futuretraxex.moviemania.Activity.MovieDetailActivity;
 import com.futuretraxex.moviemania.Activity.MovieListActivity;
+import com.futuretraxex.moviemania.Adapter.MovieTrailerListAdapter;
+import com.futuretraxex.moviemania.Adapter.ReviewPagerAdapter;
 import com.futuretraxex.moviemania.Model.MovieModelDetail;
 import com.futuretraxex.moviemania.Model.MovieReviewModel;
 import com.futuretraxex.moviemania.Model.MovieTrailerModel;
@@ -41,6 +52,7 @@ import com.futuretraxex.moviemania.R;
 import com.futuretraxex.moviemania.provider.favourites.FavouritesCursor;
 import com.futuretraxex.moviemania.provider.favourites.FavouritesSelection;
 import com.futuretraxex.moviemania.utils.Globals;
+import com.futuretraxex.moviemania.utils.PagerTransforms.ZoomOutPageTransformer;
 import com.futuretraxex.moviemania.utils.Utils;
 import com.google.gson.Gson;
 import com.orhanobut.logger.Logger;
@@ -50,6 +62,9 @@ import com.squareup.picasso.Target;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.w3c.dom.Text;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -75,7 +90,12 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
     private int mToolbarColor;
 
+    private int mCurrentReview;
+
     private MovieDetailViewHolder mMovieDetailViewHolder;
+
+    private Timer mTimer = null;
+
 
     //TODO : decide wether to save Reviews and Videos in local storage or not. discuss with Udacity Forum Members.
     //TODO : Make favourites work when we are offline.
@@ -114,6 +134,10 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
         //Setup ViewHolder
         mMovieDetailViewHolder = new MovieDetailViewHolder(rootView);
+//        mMovieDetailViewHolder.mMovieReviews = (TextSwitcher)rootView.findViewById(R.id.movie_detail_reviews);
+        //mMovieDetailViewHolder.mMovieReviews.setCurrentText("Test");
+
+
 
         return rootView;
     }
@@ -131,7 +155,7 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
 
         if(Utils.getNetworkConnectivity(getActivity())) {
-            NetworkFetchService.fetchMovieData(mId, this);
+            NetworkFetchService.fetchMovieDataReviewandTrailer(mId, this);
         }
         else {
             Bundle data = new Bundle();
@@ -218,6 +242,14 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
             JSONArray movieTrailersJSON = new JSONArray(data.getString("trailer_data"));
             MovieReviewModel movieReviews[] = new MovieReviewModel[movieReviewsJSON.length()];
             MovieTrailerModel movieTrailers[] = new MovieTrailerModel[movieTrailersJSON.length()];
+
+            for(int i = 0 ; i < movieTrailersJSON.length(); i++)    {
+                movieTrailers[i] = mGson.fromJson(movieTrailersJSON.getJSONObject(i).toString(),MovieTrailerModel.class);
+            }
+            for(int i = 0 ; i < movieReviewsJSON.length(); i++)    {
+                movieReviews[i] = mGson.fromJson(movieReviewsJSON.getJSONObject(i).toString(),MovieReviewModel.class);
+                movieReviews[i].content = movieReviews[i].content.substring(0,movieReviews[i].content.length() > 70 ? 70 : movieReviews[i].content.length()) + "... (tap to read more)";
+            }
             //SetupAppBar in case of
             setupAppBar(movie);
             //Populate UI data.
@@ -244,16 +276,58 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
     private void populateLayout(final MovieModelDetail movie, final MovieReviewModel[] movieReviewModels, final MovieTrailerModel[] movieTrailerModels)   {
 
 
-        Resources res = getResources();
+        final Resources res = getResources();
         final String ratingText = String.format(res.getString(R.string.rating_text), movie.vote_average);
         final String tagLineText = String.format(res.getString(R.string.tagline_text), movie.tagline);
         final String dateText = String.format(res.getString(R.string.releast_date_text),Utils.generateUserFriendlyDate(movie.release_date));
         final SpannableStringBuilder tagLineSpanString = new SpannableStringBuilder(tagLineText);
         tagLineSpanString.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), 0, tagLineText.length(), 0);
 
+
+
+        mCurrentReview = 0;
+
+
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                mMovieDetailViewHolder.mMovieReviewViewPager.setAdapter(new ReviewPagerAdapter(getActivity(),movieReviewModels));
+                mMovieDetailViewHolder.mMovieReviewViewPager.getAdapter().notifyDataSetChanged();
+                ViewGroup.LayoutParams layoutParams = (ViewGroup.LayoutParams) mMovieDetailViewHolder.mMovieTrailers.getLayoutParams();
+                //calculate height according to our use case nad rescale Trailer View.
+                int heightInDP;
+                if(movieTrailerModels.length == 0)  {
+                    heightInDP = 0;
+                }
+                else if (movieTrailerModels.length == 1 || movieTrailerModels.length == 2)    {
+                    heightInDP = 180;
+                }
+                else {
+                    if(movieTrailerModels.length % 2 == 1)  {
+                        heightInDP = (( movieTrailerModels.length / 2) + 1)  * 180;
+                    }
+                    else {
+                        heightInDP = ( movieTrailerModels.length / 2)  * 180;
+                    }
+
+                }
+
+                int heightInPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, heightInDP, getResources().getDisplayMetrics());
+                layoutParams.height = heightInPixels;
+                mMovieDetailViewHolder.mMovieTrailers.setLayoutParams(layoutParams);
+                mMovieDetailViewHolder.mMovieTrailers.setAdapter(new MovieTrailerListAdapter(getActivity(),movieTrailerModels));
+                mMovieDetailViewHolder.mMovieTrailers.getAdapter().notifyDataSetChanged();
+
+                mMovieDetailViewHolder.mMovieReviewViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+
+                if(movieReviewModels != null || movieReviewModels.length > 0)   {
+//                    mMovieDetailViewHolder.mMovieReviews.setCurrentText(movieReviewModels[mCurrentReview].content);
+                    mCurrentReview++;
+                    if(mCurrentReview > movieReviewModels.length - 1)   {
+                        mCurrentReview = 0;
+                    }
+                }
+
                 mMovieDetailViewHolder.mMovieRatingText.setText(ratingText);
                 if (movie.tagline.length() == 0) {
                     mMovieDetailViewHolder.mMovieTaglineText.setVisibility(View.GONE);
@@ -273,6 +347,27 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
             }
         });
+
+
+        if(movieReviewModels != null || movieReviewModels.length > 0)   {
+            mTimer = new Timer("update-reviews");
+            mTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mMovieDetailViewHolder.mMovieReviewViewPager.setCurrentItem(mCurrentReview);
+                            mCurrentReview++;
+                            if(mCurrentReview > movieReviewModels.length - 1)   {
+                                mCurrentReview = 0;
+                            }
+                        }
+                    });
+                }
+            },4000,4000);
+        }
+
 
     }
 
@@ -347,6 +442,15 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         }
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(mTimer != null)  {
+            mTimer.cancel();
+        }
+
+    }
+
     public static class MovieDetailViewHolder {
         @Bind(R.id.movie_detail_overview)
         public TextView mMovieOverView;
@@ -361,9 +465,9 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         @Bind(R.id.movie_detail_poster)
         public ImageView mMoviePoster;
         @Bind(R.id.trailers)
-        public GridView mMovieTrailers;
-        @Bind(R.id.reviews)
-        public TextSwitcher mMovieReviews;
+        public RecyclerView mMovieTrailers;
+        @Bind(R.id.movie_review_viewpager)
+        public ViewPager mMovieReviewViewPager;
 
         MovieDetailViewHolder(View rootView) {
             ButterKnife.bind(this,rootView);

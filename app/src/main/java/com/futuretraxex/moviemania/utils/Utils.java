@@ -108,6 +108,14 @@ public class Utils {
         return isConnected;
     }
 
+    public static Uri generateYoutubeMQThumbnail(String youtubeId)  {
+        return Uri.parse(Constant.API_YOUTUBE_IMAGE_BASE_URL)
+                .buildUpon()
+                .appendEncodedPath(youtubeId)
+                .appendEncodedPath(Constant.API_YOUTUBE_MQ_IMAGE_CODE)
+                .build();
+    }
+
 
     /**
      * Generates youtube uri of the form https://www.youtube.com/watch?v={id}

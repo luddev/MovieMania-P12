@@ -592,8 +592,8 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                 super(view);
                 mView = view;
                 ButterKnife.bind(this,view);
-                mContentView = (ImageView) view.findViewById(R.id.content);
-                mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar_image);
+//                mContentView = (ImageView) view.findViewById(R.id.content);
+//                mProgressBar = (ProgressBar) view.findViewById(R.id.progress_bar_image);
             }
 
         }

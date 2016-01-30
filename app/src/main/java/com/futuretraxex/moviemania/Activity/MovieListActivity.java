@@ -135,6 +135,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                 mRefreshLayout.setRefreshing(false);
                 mLoading = false;
                 if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                    Logger.w("No Item Left, Showing Empty View 1");
                     mRecyclerView.setVisibility(View.GONE);
                     mEmptyView.setVisibility(View.VISIBLE);
                 } else {
@@ -163,6 +164,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                             mRefreshLayout.setRefreshing(false);
                             mLoading = false;
                             if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                                Logger.w("No Item Left, Showing Empty View 2");
                                 mRecyclerView.setVisibility(View.GONE);
                                 mEmptyView.setVisibility(View.VISIBLE);
                             } else {
@@ -205,6 +207,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                         mRefreshLayout.setRefreshing(false);
                         mLoading = false;
                         if (mRecyclerView.getAdapter().getItemCount() == 0) {
+                            Logger.w("No Item Left, Showing Empty View 3");
                             mRecyclerView.setVisibility(View.GONE);
                             mEmptyView.setVisibility(View.VISIBLE);
                         } else {
@@ -227,20 +230,23 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
         //Bind Butterknife.
         ButterKnife.bind(this);
         //Initialize Logger.
+
         Logger.init();
         //Reload instance state in case of change of orientation.
-        if(savedInstanceState != null)  {
-//            mRecyclerListState = savedInstanceState.getParcelable(MOVIE_LIST_VIEW_SAVE_INSTANCE);
-//            mMovieAdapterState = savedInstanceState.getParcelableArrayList(MOVIE_LIST_SAVE_INSTANCE);
 
-            onRestoreInstanceState(savedInstanceState);
-        }
         setSupportActionBar(mToolbar);
         mToolbar.setTitle(getTitle());
         mLoading = false;
         mGson = new Gson();
 
         setupViews();
+        if(savedInstanceState != null)  {
+//            mRecyclerListState = savedInstanceState.getParcelable(MOVIE_LIST_VIEW_SAVE_INSTANCE);
+//            mMovieAdapterState = savedInstanceState.getParcelableArrayList(MOVIE_LIST_SAVE_INSTANCE);
+
+            onRestoreInstanceState(savedInstanceState);
+
+        }
 //        postUICreation();
     }
 
@@ -301,7 +307,6 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
 
         //Save Movie Adapter
         mMovieAdapterState = ((MovieListAdapter)mRecyclerView.getAdapter()).getMovieList();
@@ -310,15 +315,16 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
         mRecyclerListState = mRecyclerView.getLayoutManager().onSaveInstanceState();
         outState.putParcelable(MOVIE_LIST_VIEW_SAVE_INSTANCE,mRecyclerListState);
 
+        super.onSaveInstanceState(outState);
 
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
         mRecyclerListState = savedInstanceState.getParcelable(MOVIE_LIST_VIEW_SAVE_INSTANCE);
         mMovieAdapterState = savedInstanceState.getParcelableArrayList(MOVIE_LIST_SAVE_INSTANCE);
+
     }
 
 //    private void postUICreation()   {
@@ -333,11 +339,14 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
     @Override
     protected void onResume() {
         super.onResume();
-
+        Logger.w("Resuming");
         if(mMovieAdapterState != null)  {
+            Logger.w("Restoring List Values");
             ((MovieListAdapter)mRecyclerView.getAdapter()).resotreArrayList(mMovieAdapterState);
+
         }
         if (mRecyclerListState != null) {
+            Logger.w("Restoring List State.");
             mRecyclerView.getLayoutManager().onRestoreInstanceState(mRecyclerListState);
         }
 
@@ -428,6 +437,7 @@ public class MovieListActivity extends AppCompatActivity implements NetworkFetch
                 //Show progress bar.
                 //Load stuff.
                 //Fetch data.
+
                 Bundle urlParams = new Bundle();
                 urlParams.putString("page", String.valueOf(current_page));
                 mPage = current_page;

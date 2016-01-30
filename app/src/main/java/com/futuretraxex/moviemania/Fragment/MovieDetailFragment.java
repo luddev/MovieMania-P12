@@ -2,6 +2,7 @@ package com.futuretraxex.moviemania.Fragment;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -16,10 +17,12 @@ import android.os.Build;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -49,6 +52,8 @@ import com.futuretraxex.moviemania.Model.MovieReviewModel;
 import com.futuretraxex.moviemania.Model.MovieTrailerModel;
 import com.futuretraxex.moviemania.NetworkServices.NetworkFetchService;
 import com.futuretraxex.moviemania.R;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesColumns;
+import com.futuretraxex.moviemania.provider.favourites.FavouritesContentValues;
 import com.futuretraxex.moviemania.provider.favourites.FavouritesCursor;
 import com.futuretraxex.moviemania.provider.favourites.FavouritesSelection;
 import com.futuretraxex.moviemania.utils.Globals;
@@ -68,6 +73,7 @@ import java.util.TimerTask;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 /**
  * A fragment representing a single Movie detail screen.
@@ -96,6 +102,14 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
 
     private Timer mTimer = null;
 
+    private Bundle mMovieData;
+
+    //Bind floating action button here.
+    @Bind(R.id.fab)
+    public FloatingActionButton mLikeButton;
+
+
+    private NestedScrollView mMovieDetailContainer;
 
     //TODO : decide wether to save Reviews and Videos in local storage or not. discuss with Udacity Forum Members.
     //TODO : Make favourites work when we are offline.
@@ -122,6 +136,10 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
                 //appBarLayout.setTitle(mItem.content);
             }
         }
+        if(!Globals.sTwoPane) {
+            mMovieDetailContainer = (NestedScrollView) getActivity().findViewById(R.id.movie_detail_container);
+            mMovieDetailContainer.setSmoothScrollingEnabled(true);
+        }
 
         mGson = new Gson();
         mToolbarColor = getResources().getColor(R.color.colorPrimary);
@@ -136,7 +154,7 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         mMovieDetailViewHolder = new MovieDetailViewHolder(rootView);
 //        mMovieDetailViewHolder.mMovieReviews = (TextSwitcher)rootView.findViewById(R.id.movie_detail_reviews);
         //mMovieDetailViewHolder.mMovieReviews.setCurrentText("Test");
-
+        ButterKnife.bind(this,rootView);
 
 
         return rootView;
@@ -183,16 +201,136 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
                 data.putString("trailer_data",favouriteItem.getSerializedTrailers());
                 data.putString("review_data",favouriteItem.getSerializedReviews());
                 data.putString("movie_data",movieString);
+                mMovieData = new Bundle(data);
                 onSuccess(data);
             }
 
         }
 
         //Fetch Reviews and trailers.
+        //setup Like button here.
+        if(Globals.sTwoPane)    {
+            FavouritesSelection where = new FavouritesSelection();
+            where.movieId(mId).and().isFavourite(true);
+            FavouritesCursor favouriteItem = where.query(getActivity().getContentResolver());
+            //Set floating bar icon depending on wether current movie is in favourite list or not.
+            if(favouriteItem != null && favouriteItem.moveToFirst())    {
+                setFabIcon(true);
+            }
+            else {
+                setFabIcon(false);
+            }
+        }
+    }
+
+    //On Fav icon click, favourite if it isn't in favourite list , unfavourite otherwise.
+    @OnClick(R.id.fab)
+    public void onFabClickHandler(View view)    {
+        final Gson gson = new Gson();
+
+        FavouritesSelection where = new FavouritesSelection();
+        where.movieId(mId);
+        FavouritesCursor favouriteItem = where.query(getActivity().getContentResolver());
+        //If movie is in database check if it is favourite or not.
+        if(favouriteItem != null && favouriteItem.moveToFirst())    {
+//            if it is favourite, unFavourite it.
+            FavouritesContentValues values = new FavouritesContentValues();
+            values.putMovieId(mId);
+            if(favouriteItem.getIsFavourite())  {
+                values.putIsFavourite(false);
+                Snackbar.make(view, "Removed from Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                setFabIcon(false);
+
+            }
+            //if it is not favourite, Favourite it.
+            else {
+                Snackbar.make(view, "Added to Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                values.putIsFavourite(true);
+                setFabIcon(true);
+
+            }
+            Uri movieUri = ContentUris.withAppendedId(FavouritesColumns.CONTENT_URI,favouriteItem.getId());
+            getActivity().getContentResolver().update(movieUri,values.values(),null,null);
+//            getContentResolver().delete(movieUri,null,null);
+            //Use this instead.
+//                String WHERE = FavouritesColumns.MOVIE_ID + "= ?";
+//            getContentResolver().update(FavouritesColumns.CONTENT_URI,values.values(),WHERE,new String[] {new Long(favouriteItem.getMovieId()).toString()});
+            //Update Fav icon.
+
+        }
+        else {
+            //if it isn't in database add it and favourite it.
+            final FavouritesContentValues values = new FavouritesContentValues();
+            values.putIsFavourite(true);
+            Snackbar.make(view, "Added to Favourites", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setFabIcon(true);
+                }
+            });
+            Logger.w("Adding to favourites new entry");
+            if(mMovieData != null)  {
+                Logger.w("Adding to favourites");
+                MovieModelDetail movieData = gson.fromJson(mMovieData.getString("movie_data"),MovieModelDetail.class);
+                values.putAdult(movieData.adult);
+                values.putMovieId(mId);
+                values.putOriginalTitle(movieData.original_title);
+                values.putOverview(movieData.overview);
+                values.putPopularity(movieData.popularity);
+                values.putPosterPath(movieData.poster_path);
+                values.putTagline(movieData.tagline);
+                values.putVoteAverage(movieData.vote_average);
+                values.putReleaseDate(movieData.release_date);
+                values.putBackdropPath(movieData.backdrop_path);
+                //Insert into table.
+                values.putSerializedTrailers(mMovieData.getString("trailer_data"));
+                values.putSerializedReviews(mMovieData.getString("review_data"));
+                getActivity().getContentResolver().insert(FavouritesColumns.CONTENT_URI,values.values());
+
+            }
+            //Don't need to fetch it twice.
+//
+//            NetworkFetchService.fetchMovieDataReviewandTrailer(mId, new NetworkFetchService.NetworkFetchServiceCB() {
+//                @Override
+//                public void onSuccess(Bundle data) {
+//
+//
+//                }
+//
+//                @Override
+//                public void onFailure(Bundle data) {
+//                    //Failed to update db and UI.
+//                }
+//            });
+            //Set FAB Icon.
+        }
 
     }
 
+    private void setFabIcon(boolean isFavourite)   {
+        long itemID = mId;
 
+        if(isFavourite) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mLikeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_favorite_black_24dp));
+            }
+            else {
+                mLikeButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_black_24dp));
+            }
+        }
+        else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mLikeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_favorite_border_black_24dp));
+            }
+            else {
+                mLikeButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_favorite_border_black_24dp));
+            }
+        }
+    }
 
     private void animateUI()    {
         View[] animatedViews = new View[]   {
@@ -200,7 +338,10 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
                 mMovieDetailViewHolder.mMovieDateText,
                 mMovieDetailViewHolder.mMovieRatingText,
                 mMovieDetailViewHolder.mMovieTaglineText,
-                mMovieDetailViewHolder.mMovieOverView
+                mMovieDetailViewHolder.mMovieOverView,
+                mMovieDetailViewHolder.mMovieTrailers,
+                mMovieDetailViewHolder.mMovieReviewViewPager
+
         };
 
         Interpolator interpolator = new DecelerateInterpolator();
@@ -235,6 +376,7 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
     @Override
     public void onSuccess(Bundle data) {
         String movieData = data.getString("movie_data");
+        mMovieData = new Bundle(data);
         final MovieModelDetail movie = mGson.fromJson(movieData, MovieModelDetail.class);
 //      final RatingBar ratingBar = (RatingBar) getView().findViewById(R.id.movie_detail_rating);
         try {
@@ -253,13 +395,16 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
             //SetupAppBar in case of
             setupAppBar(movie);
             //Populate UI data.
-            populateLayout(movie,movieReviews,movieTrailers);
+            if(!isDetached()) {
+                populateLayout(movie, movieReviews, movieTrailers);
+            }
         }
         catch(JSONException jox)    {
             Logger.e(jox.toString());
         }
 
     }
+
 
     @Override
     public void onFailure(Bundle data) {
@@ -282,6 +427,8 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         final String dateText = String.format(res.getString(R.string.releast_date_text),Utils.generateUserFriendlyDate(movie.release_date));
         final SpannableStringBuilder tagLineSpanString = new SpannableStringBuilder(tagLineText);
         tagLineSpanString.setSpan(new StyleSpan(Typeface.BOLD_ITALIC), 0, tagLineText.length(), 0);
+
+
 
 
 
@@ -317,6 +464,9 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
                 mMovieDetailViewHolder.mMovieTrailers.setLayoutParams(layoutParams);
                 mMovieDetailViewHolder.mMovieTrailers.setAdapter(new MovieTrailerListAdapter(getActivity(),movieTrailerModels));
                 mMovieDetailViewHolder.mMovieTrailers.getAdapter().notifyDataSetChanged();
+                if(!Globals.sTwoPane)    {
+                    mMovieDetailContainer.setVerticalScrollbarPosition(0);
+                }
 
                 mMovieDetailViewHolder.mMovieReviewViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
 
@@ -468,6 +618,7 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         public RecyclerView mMovieTrailers;
         @Bind(R.id.movie_review_viewpager)
         public ViewPager mMovieReviewViewPager;
+
 
         MovieDetailViewHolder(View rootView) {
             ButterKnife.bind(this,rootView);

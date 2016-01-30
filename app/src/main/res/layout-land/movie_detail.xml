@@ -112,29 +112,36 @@
             tools:context=".Fragment.MovieDetailFragment" />
 
 
-        <android.support.v4.view.ViewPager
-            android:id="@+id/movie_review_viewpager"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-
-        <TextSwitcher
-            android:id="@+id/movie_detail_reviews"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-
-        </TextSwitcher>
-
         <android.support.v7.widget.RecyclerView
             app:layoutManager="GridLayoutManager"
             app:spanCount="2"
             android:id="@+id/trailers"
+            android:padding="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:minHeight="300dp"
+            >
 
 
         </android.support.v7.widget.RecyclerView>
+
+        <TextView
+            style="?android:attr/textAppearanceSearchResultTitle"
+            tools:text="Reviews"
+            android:text="@string/movie_detail_reviews"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="16dp"
+            tools:context=".Fragment.MovieDetailFragment" />
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/movie_review_viewpager"
+            android:layout_width="match_parent"
+            android:padding="16dp"
+            style="?android:attr/textAppearanceLarge"
+            android:layout_height="100dp">
+
+        </android.support.v4.view.ViewPager>
 
 
     </LinearLayout>

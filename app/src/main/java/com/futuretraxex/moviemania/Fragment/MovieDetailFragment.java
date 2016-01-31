@@ -105,7 +105,6 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
     private Bundle mMovieData;
 
     //Bind floating action button here.
-    @Bind(R.id.fab)
     public FloatingActionButton mLikeButton;
 
 
@@ -154,8 +153,11 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         mMovieDetailViewHolder = new MovieDetailViewHolder(rootView);
 //        mMovieDetailViewHolder.mMovieReviews = (TextSwitcher)rootView.findViewById(R.id.movie_detail_reviews);
         //mMovieDetailViewHolder.mMovieReviews.setCurrentText("Test");
-        ButterKnife.bind(this,rootView);
+        //ButterKnife.bind(this,rootView);
 
+        if(Globals.sTwoPane)    {
+            mLikeButton = (FloatingActionButton) rootView.findViewById(R.id.fab);
+        }
 
         return rootView;
     }

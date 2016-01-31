@@ -127,6 +127,7 @@
     <TextView
         style="?android:attr/textAppearanceSearchResultTitle"
         tools:text="Reviews"
+        android:id="@+id/movie_detail_review_text"
         android:text="@string/movie_detail_reviews"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -438,8 +438,15 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mMovieDetailViewHolder.mMovieReviewViewPager.setAdapter(new ReviewPagerAdapter(getActivity(),movieReviewModels));
-                mMovieDetailViewHolder.mMovieReviewViewPager.getAdapter().notifyDataSetChanged();
+                if(movieReviewModels.length > 0)    {
+                    mMovieDetailViewHolder.mMovieDetailReview.setVisibility(View.VISIBLE);
+                    mMovieDetailViewHolder.mMovieReviewViewPager.setAdapter(new ReviewPagerAdapter(getActivity(),movieReviewModels));
+                    mMovieDetailViewHolder.mMovieReviewViewPager.getAdapter().notifyDataSetChanged();
+                }
+                else {
+                    mMovieDetailViewHolder.mMovieDetailReview.setVisibility(View.GONE);
+                }
+
                 ViewGroup.LayoutParams layoutParams = (ViewGroup.LayoutParams) mMovieDetailViewHolder.mMovieTrailers.getLayoutParams();
                 //calculate height according to our use case nad rescale Trailer View.
                 int heightInDP;
@@ -618,6 +625,8 @@ public class MovieDetailFragment extends Fragment implements NetworkFetchService
         public RecyclerView mMovieTrailers;
         @Bind(R.id.movie_review_viewpager)
         public ViewPager mMovieReviewViewPager;
+        @Bind(R.id.movie_detail_review_text)
+        public TextView mMovieDetailReview;
 
 
         MovieDetailViewHolder(View rootView) {

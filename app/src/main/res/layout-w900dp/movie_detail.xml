@@ -5,11 +5,30 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/movie_detail_tab_container"
+
+        >
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/fab_margin"
+            android:layout_gravity="top|right"
+            android:src="@drawable/ic_favorite_border_black_24dp"
+            app:layout_anchor="@id/movie_detail_tab_container"
+            app:layout_anchorGravity="top|right|end" />
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:id="@+id/movie_detail_tab_container"
+
         >
 
 
@@ -39,15 +58,7 @@
 
                 />
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|start"
-                android:layout_margin="@dimen/fab_margin"
-                android:src="@drawable/ic_favorite_border_black_24dp"
-                app:layout_anchor="@+id/movie_detail_tab_container"
-                app:layout_anchorGravity="top|end" />
+
 
 
             <LinearLayout
@@ -143,6 +154,7 @@
         <TextView
             style="?android:attr/textAppearanceSearchResultTitle"
             tools:text="Reviews"
+            android:id="@+id/movie_detail_review_text"
             android:text="@string/movie_detail_reviews"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -162,6 +174,7 @@
 
     </LinearLayout>
 
+    </android.support.design.widget.CoordinatorLayout>
 
 
 

@@ -1,0 +1,4 @@
+# rename this file to gradle.properties
+# replace XYZ342206 with your API key.
+
+TmdbApiKey="XYZ342206"

@@ -1,0 +1,7 @@
+language: android
+android:
+    components:
+        - android-21
+        - extra-android-m2repository
+        - tools
+        - platform-tools
